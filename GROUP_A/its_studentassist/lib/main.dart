@@ -2,130 +2,131 @@
 Group: GROUP_A
 Members:
 - Sibusiso Sweetwell Masombuka - 223021992
-- Full Name - Student Number (TBD)
-- Full Name - Student Number (TBD)
-- Full Name - Student Number (TBD)
-- Full Name - Student Number (TBD)
+- Sibonelo Nkosikhona Shabalala - 222086498
+- Khanyile Simphiwe Chaka - 222028298
+- Neo Moeketsi Motseki - 223061469
+- Dan Khoza - 223062645
+- Bonolo Olifant - 223016901
+- Rekopantswe Molefe - 223065272
+- Skhumbuzo Kgethe - 222000496
+- Lesedi Setuke - 222009442
+- Tshego Malope - 222017305
 */
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'core/theme/app_theme.dart';
+import 'core/routes/app_routes.dart';
+import 'services/supabase_service.dart';
+import 'viewmodels/admin_review_viewmodel.dart';
+import 'viewmodels/application_viewmodel.dart';
+import 'viewmodels/auth_viewmodel.dart';
+import 'viewmodels/reference_data_viewmodel.dart';
+import 'views/screens/access_denied_screen.dart';
+import 'views/screens/admin_review_detail_screen.dart';
+import 'views/screens/admin_dashboard_screen.dart';
+import 'views/screens/admin_review_list_screen.dart';
+import 'views/screens/application_form_screen.dart';
+import 'views/screens/login_screen.dart';
+import 'views/screens/my_application_detail_screen.dart';
+import 'views/screens/profile_screen.dart';
+import 'views/screens/register_screen.dart';
+import 'views/screens/student_dashboard_screen.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  String? startupError;
+  try {
+    await SupabaseService.initialize();
+  } catch (error) {
+    startupError = error.toString();
+  }
+  runApp(MyApp(startupError: startupError));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String? startupError;
 
-  // This widget is the root of your application.
+  const MyApp({super.key, this.startupError});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => ApplicationViewModel()),
+        ChangeNotifierProvider(create: (_) => ReferenceDataViewModel()),
+        ChangeNotifierProvider(create: (_) => AdminReviewViewModel()),
+      ],
+      child: MaterialApp(
+        title: 'Student Assistant App',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(),
+        home: startupError == null
+            ? null
+            : _StartupErrorScreen(message: startupError!),
+        initialRoute: startupError == null ? AppRoutes.login : null,
+        routes: startupError == null
+            ? {
+                AppRoutes.login: (context) => const LoginScreen(),
+                AppRoutes.register: (context) => const RegisterScreen(),
+                AppRoutes.studentDashboard: (context) =>
+                    const StudentDashboardScreen(),
+                AppRoutes.applicationForm: (context) =>
+                    const ApplicationFormScreen(),
+                AppRoutes.myApplicationDetail: (context) =>
+                    const MyApplicationDetailScreen(),
+                AppRoutes.adminDashboard: (context) =>
+                    const AdminDashboardScreen(),
+                AppRoutes.adminReviewList: (context) =>
+                    const AdminReviewListScreen(),
+                AppRoutes.adminReviewDetail: (context) =>
+                    const AdminReviewDetailScreen(),
+                AppRoutes.accessDenied: (context) => const AccessDeniedScreen(),
+                AppRoutes.profile: (context) => const ProfileScreen(),
+              }
+            : const <String, WidgetBuilder>{},
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class _StartupErrorScreen extends StatelessWidget {
+  final String message;
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  const _StartupErrorScreen({required this.message});
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
+      appBar: AppBar(title: const Text('Configuration Required')),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'App could not start because Supabase settings are missing.',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(message),
+                const SizedBox(height: 12),
+                const Text(
+                  'Run with:\n'
+                  'flutter run -d chrome --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...',
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
