@@ -87,6 +87,22 @@ class MyApp extends StatelessWidget {
                 AppRoutes.profile: (context) => const ProfileScreen(),
               }
             : const <String, WidgetBuilder>{},
+        onUnknownRoute: startupError == null
+            ? (settings) {
+                final blockedResource = settings.name ?? 'unknown route';
+                return MaterialPageRoute<void>(
+                  settings: RouteSettings(
+                    name: settings.name,
+                    arguments: <String, dynamic>{
+                      'message':
+                          'The page you requested is not available in this application.',
+                      'blockedResource': blockedResource,
+                    },
+                  ),
+                  builder: (context) => const AccessDeniedScreen(),
+                );
+              }
+            : null,
       ),
     );
   }
