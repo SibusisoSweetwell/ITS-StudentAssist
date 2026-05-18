@@ -59,36 +59,98 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ReferenceDataViewModel()),
         ChangeNotifierProvider(create: (_) => AdminReviewViewModel()),
       ],
-      child: MaterialApp(
-        title: 'Student Assistant App',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        home: startupError == null
-            ? null
-            : _StartupErrorScreen(message: startupError!),
-        initialRoute: startupError == null ? AppRoutes.login : null,
-        routes: startupError == null
-            ? {
+      child: startupError == null
+          ? MaterialApp(
+              title: 'Student Assistant App',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.light(),
+              routes: {
                 AppRoutes.login: (context) => const LoginScreen(),
                 AppRoutes.register: (context) => const RegisterScreen(),
-                AppRoutes.studentDashboard: (context) =>
-                    const StudentDashboardScreen(),
-                AppRoutes.applicationForm: (context) =>
-                    const ApplicationFormScreen(),
-                AppRoutes.myApplicationDetail: (context) =>
-                    const MyApplicationDetailScreen(),
-                AppRoutes.adminDashboard: (context) =>
-                    const AdminDashboardScreen(),
-                AppRoutes.adminReviewList: (context) =>
-                    const AdminReviewListScreen(),
-                AppRoutes.adminReviewDetail: (context) =>
-                    const AdminReviewDetailScreen(),
                 AppRoutes.accessDenied: (context) => const AccessDeniedScreen(),
-                AppRoutes.profile: (context) => const ProfileScreen(),
-              }
-            : const <String, WidgetBuilder>{},
-        onUnknownRoute: startupError == null
-            ? (settings) {
+              },
+              onGenerateRoute: (settings) {
+                final name = settings.name;
+                final user = SupabaseService.client.auth.currentUser;
+
+                // Protect these routes from unauthenticated access
+                switch (name) {
+                  case AppRoutes.studentDashboard:
+                  case AppRoutes.applicationForm:
+                  case AppRoutes.myApplicationDetail:
+                  case AppRoutes.profile:
+                    if (user == null) {
+                      return MaterialPageRoute<void>(
+                        settings: RouteSettings(
+                          name: name,
+                          arguments: <String, dynamic>{
+                            'message': 'You must be logged in to view this page.',
+                            'blockedResource': name ?? 'protected route',
+                          },
+                        ),
+                        builder: (context) => const AccessDeniedScreen(),
+                      );
+                    }
+                    break;
+                  case AppRoutes.adminDashboard:
+                  case AppRoutes.adminReviewList:
+                  case AppRoutes.adminReviewDetail:
+                    if (user == null) {
+                      return MaterialPageRoute<void>(
+                        settings: RouteSettings(
+                          name: name,
+                          arguments: <String, dynamic>{
+                            'message': 'Admin access requires login.',
+                            'blockedResource': name ?? 'admin route',
+                          },
+                        ),
+                        builder: (context) => const AccessDeniedScreen(),
+                      );
+                    }
+                    break;
+                }
+
+                // Fall back to default behavior for known routes
+                if (name == AppRoutes.studentDashboard) {
+                  return MaterialPageRoute<void>(
+                      settings: settings,
+                      builder: (context) => const StudentDashboardScreen());
+                }
+                if (name == AppRoutes.applicationForm) {
+                  return MaterialPageRoute<void>(
+                      settings: settings,
+                      builder: (context) => const ApplicationFormScreen());
+                }
+                if (name == AppRoutes.myApplicationDetail) {
+                  return MaterialPageRoute<void>(
+                      settings: settings,
+                      builder: (context) => const MyApplicationDetailScreen());
+                }
+                if (name == AppRoutes.adminDashboard) {
+                  return MaterialPageRoute<void>(
+                      settings: settings,
+                      builder: (context) => const AdminDashboardScreen());
+                }
+                if (name == AppRoutes.adminReviewList) {
+                  return MaterialPageRoute<void>(
+                      settings: settings,
+                      builder: (context) => const AdminReviewListScreen());
+                }
+                if (name == AppRoutes.adminReviewDetail) {
+                  return MaterialPageRoute<void>(
+                      settings: settings,
+                      builder: (context) => const AdminReviewDetailScreen());
+                }
+                if (name == AppRoutes.profile) {
+                  return MaterialPageRoute<void>(
+                      settings: settings,
+                      builder: (context) => const ProfileScreen());
+                }
+
+                // Let onUnknownRoute handle anything else (will show 403)
+                return null;
+              },
+              onUnknownRoute: (settings) {
                 final blockedResource = settings.name ?? 'unknown route';
                 return MaterialPageRoute<void>(
                   settings: RouteSettings(
@@ -101,9 +163,14 @@ class MyApp extends StatelessWidget {
                   ),
                   builder: (context) => const AccessDeniedScreen(),
                 );
-              }
-            : null,
-      ),
+              },
+            )
+          : MaterialApp(
+              title: 'Student Assistant App',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.light(),
+              home: _StartupErrorScreen(message: startupError!),
+            ),
     );
   }
 }
